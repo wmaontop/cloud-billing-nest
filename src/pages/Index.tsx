@@ -107,7 +107,7 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <ServiceCard
               title="Game Servers"
-              description="Deploy your game server in seconds with our optimized game hosting platform. Support for Minecraft, Valheim, ARK and more."
+              description="Deploy your game server in seconds with our optimized game hosting platform. Support for Minecraft, FiveM, Rust, ARK and more."
               icon={<Server />}
               href="/game-servers"
             />
@@ -131,7 +131,7 @@ const Index = () => {
       <section className="bg-muted py-20">
         <div className="container">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">Why Choose CloudHost</h2>
+            <h2 className="text-3xl font-bold mb-4">Why Choose NextGen Hosting</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               We provide the best hosting experience with powerful features and
               excellent customer support.

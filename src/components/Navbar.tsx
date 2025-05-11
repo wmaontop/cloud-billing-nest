@@ -20,7 +20,7 @@ const Navbar = () => {
         <div className="flex items-center">
           <Link to="/" className="flex items-center space-x-2">
             <Server className="h-6 w-6 text-primary" />
-            <span className="text-xl font-semibold">CloudHost</span>
+            <span className="text-xl font-semibold">NextGen Hosting</span>
           </Link>
         </div>
 
@@ -41,6 +41,30 @@ const Navbar = () => {
             }`}
           >
             Pricing
+          </Link>
+          <Link
+            to="/game-servers"
+            className={`text-sm font-medium transition-colors hover:text-primary ${
+              isActive("/game-servers") ? "text-primary" : "text-muted-foreground"
+            }`}
+          >
+            Game Servers
+          </Link>
+          <Link
+            to="/vps"
+            className={`text-sm font-medium transition-colors hover:text-primary ${
+              isActive("/vps") ? "text-primary" : "text-muted-foreground"
+            }`}
+          >
+            VPS
+          </Link>
+          <Link
+            to="/web-hosting"
+            className={`text-sm font-medium transition-colors hover:text-primary ${
+              isActive("/web-hosting") ? "text-primary" : "text-muted-foreground"
+            }`}
+          >
+            Web Hosting
           </Link>
           <Link
             to="/about"
@@ -121,6 +145,33 @@ const Navbar = () => {
               onClick={() => setIsMenuOpen(false)}
             >
               Pricing
+            </Link>
+            <Link
+              to="/game-servers"
+              className={`text-sm font-medium ${
+                isActive("/game-servers") ? "text-primary" : ""
+              }`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Game Servers
+            </Link>
+            <Link
+              to="/vps"
+              className={`text-sm font-medium ${
+                isActive("/vps") ? "text-primary" : ""
+              }`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              VPS
+            </Link>
+            <Link
+              to="/web-hosting"
+              className={`text-sm font-medium ${
+                isActive("/web-hosting") ? "text-primary" : ""
+              }`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Web Hosting
             </Link>
             <Link
               to="/about"
