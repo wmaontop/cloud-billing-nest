@@ -1,0 +1,474 @@
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { useAuth } from "@/contexts/AuthContext";
+import { Server, Shield, Users, Database, Settings, CreditCard } from "lucide-react";
+
+const AdminPanel = () => {
+  const { user } = useAuth();
+  const [users, setUsers] = useState(() => {
+    const storedUsers = localStorage.getItem('ngHostingUsers');
+    return storedUsers ? JSON.parse(storedUsers) : [];
+  });
+  const [servers, setServers] = useState(() => {
+    const storedServers = localStorage.getItem('ngHostingServers');
+    return storedServers ? JSON.parse(storedServers) : [];
+  });
+  
+  // Mock server creation API data
+  const [apiKey, setApiKey] = useState("ptla_Zmu6YYkofIx0zhZn4BO2WFg7Lvp1X9m1I2lc4rHoOvg");
+  const [apiUrl, setApiUrl] = useState("https://gamepanel.nextgenhosting.net");
+  
+  const handleSaveApiSettings = () => {
+    localStorage.setItem('ngHostingApiSettings', JSON.stringify({ apiKey, apiUrl }));
+    alert("API settings saved!");
+  };
+  
+  return (
+    <div className="min-h-screen flex flex-col bg-gray-900 text-white">
+      <Navbar />
+      
+      <div className="container py-8 flex-grow">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">Admin Panel</h1>
+            <p className="text-gray-400">Welcome back, {user?.firstName} {user?.lastName}</p>
+          </div>
+          <div className="flex items-center space-x-2 bg-gray-800 px-4 py-2 rounded-md">
+            <Shield className="h-5 w-5 text-blue-400" />
+            <span className="text-blue-400 font-medium">Administrator</span>
+          </div>
+        </div>
+        
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="grid grid-cols-5 mb-8 bg-gray-800">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-red-600 data-[state=active]:text-white">Overview</TabsTrigger>
+            <TabsTrigger value="users" className="data-[state=active]:bg-red-600 data-[state=active]:text-white">Users</TabsTrigger>
+            <TabsTrigger value="servers" className="data-[state=active]:bg-red-600 data-[state=active]:text-white">Servers</TabsTrigger>
+            <TabsTrigger value="billing" className="data-[state=active]:bg-red-600 data-[state=active]:text-white">Billing</TabsTrigger>
+            <TabsTrigger value="settings" className="data-[state=active]:bg-red-600 data-[state=active]:text-white">Settings</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="overview">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <Card className="bg-gray-800 border-red-500/30">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Users className="h-5 w-5 text-red-400 mr-2" />
+                    Users
+                  </CardTitle>
+                  <CardDescription className="text-gray-400">
+                    Manage your users
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{users.length}</div>
+                  <p className="text-gray-400">Total registered users</p>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-gray-800 border-blue-500/30">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Server className="h-5 w-5 text-blue-400 mr-2" />
+                    Servers
+                  </CardTitle>
+                  <CardDescription className="text-gray-400">
+                    Manage your servers
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{servers.length}</div>
+                  <p className="text-gray-400">Active servers</p>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-gray-800 border-green-500/30">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <CreditCard className="h-5 w-5 text-green-400 mr-2" />
+                    Revenue
+                  </CardTitle>
+                  <CardDescription className="text-gray-400">
+                    Monthly revenue
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">$0.00</div>
+                  <p className="text-gray-400">This month</p>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <Card className="bg-gray-800 border-red-500/20">
+              <CardHeader>
+                <CardTitle>Recent Activity</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Latest actions on your platform
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between border-b border-gray-700 pb-4">
+                    <div className="flex items-center">
+                      <Shield className="h-5 w-5 text-blue-400 mr-3" />
+                      <div>
+                        <p className="font-medium">Admin account created</p>
+                        <p className="text-sm text-gray-400">
+                          {user?.firstName} {user?.lastName} added as administrator
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-400">Just now</div>
+                  </div>
+                  <div className="flex items-center justify-between border-b border-gray-700 pb-4">
+                    <div className="flex items-center">
+                      <Settings className="h-5 w-5 text-yellow-400 mr-3" />
+                      <div>
+                        <p className="font-medium">Panel initialized</p>
+                        <p className="text-sm text-gray-400">
+                          NextGen Hosting panel was set up
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-400">Just now</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="users">
+            <Card className="bg-gray-800 border-red-500/20">
+              <CardHeader>
+                <CardTitle>User Management</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Manage your platform users
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border border-gray-700">
+                  <table className="min-w-full divide-y divide-gray-700">
+                    <thead className="bg-gray-700">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Name</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Email</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Role</th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-gray-800 divide-y divide-gray-700">
+                      {users.map((user: any, index: number) => (
+                        <tr key={index}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            {user.firstName} {user.lastName}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            {user.email}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            {user.isAdmin ? 
+                              <span className="px-2 py-1 text-xs rounded-full bg-blue-900 text-blue-300">Admin</span> : 
+                              <span className="px-2 py-1 text-xs rounded-full bg-gray-700 text-gray-300">User</span>
+                            }
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
+                              Edit
+                            </Button>
+                            <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300">
+                              Delete
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="servers">
+            <Card className="bg-gray-800 border-red-500/20">
+              <CardHeader>
+                <CardTitle>Pterodactyl API Settings</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Configure your Pterodactyl panel integration
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="api-url" className="text-gray-300">Panel URL</Label>
+                    <Input 
+                      id="api-url" 
+                      value={apiUrl}
+                      onChange={(e) => setApiUrl(e.target.value)}
+                      className="bg-gray-700 border-gray-600 text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="api-key" className="text-gray-300">Admin API Key</Label>
+                    <Input 
+                      id="api-key" 
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                      className="bg-gray-700 border-gray-600 text-white"
+                    />
+                    <p className="text-sm text-gray-400">
+                      This key is used to create and manage servers on your Pterodactyl panel.
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={handleSaveApiSettings}
+                    className="bg-gradient-to-r from-red-600 to-blue-600 hover:from-red-500 hover:to-blue-500"
+                  >
+                    Save API Settings
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <div className="mt-6">
+              <Card className="bg-gray-800 border-red-500/20">
+                <CardHeader>
+                  <CardTitle>Server Templates</CardTitle>
+                  <CardDescription className="text-gray-400">
+                    Configure game server templates
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="rounded-md border border-gray-700">
+                    <table className="min-w-full divide-y divide-gray-700">
+                      <thead className="bg-gray-700">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Game</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Egg</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Nest</th>
+                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-gray-800 divide-y divide-gray-700">
+                        <tr>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            Minecraft
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            Paper
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            Minecraft
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
+                              Edit
+                            </Button>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            FiveM
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            FXServer
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            GTA
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
+                              Edit
+                            </Button>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            Rust
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            Vanilla
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            Rust
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
+                              Edit
+                            </Button>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            ARK
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            Survival Evolved
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            ARK
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
+                              Edit
+                            </Button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="billing">
+            <Card className="bg-gray-800 border-red-500/20">
+              <CardHeader>
+                <CardTitle>Payment Settings</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Configure payment methods and pricing
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between p-4 border border-gray-700 rounded-md">
+                    <div className="flex items-center">
+                      <div className="h-10 w-10 rounded-md bg-blue-900 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-400" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013 1.787-.026 3.015-.524 4.769 1.289-1.02 1.553-2.7 1.131-4.228z"/>
+                        </svg>
+                      </div>
+                      <div className="ml-4">
+                        <h3 className="font-medium">PayPal</h3>
+                        <p className="text-sm text-gray-400">Enable PayPal payments</p>
+                      </div>
+                    </div>
+                    <Button className="bg-blue-600 hover:bg-blue-500">Configure</Button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <h3 className="font-medium">Game Server Pricing</h3>
+                    <div className="rounded-md border border-gray-700">
+                      <table className="min-w-full divide-y divide-gray-700">
+                        <thead className="bg-gray-700">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Plan</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">CPU</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">RAM</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Storage</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Price</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-gray-800 divide-y divide-gray-700">
+                          <tr>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                              Starter
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">1 Core</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">2 GB</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">20 GB</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">$5.99/mo</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
+                                Edit
+                              </Button>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                              Standard
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">2 Cores</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">4 GB</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">50 GB</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">$12.99/mo</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
+                                Edit
+                              </Button>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                              Premium
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">4 Cores</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">8 GB</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">100 GB</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">$24.99/mo</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
+                                Edit
+                              </Button>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="settings">
+            <Card className="bg-gray-800 border-red-500/20">
+              <CardHeader>
+                <CardTitle>Panel Settings</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Configure your hosting panel
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="panel-name" className="text-gray-300">Panel Name</Label>
+                    <Input 
+                      id="panel-name" 
+                      defaultValue="NextGen Hosting"
+                      className="bg-gray-700 border-gray-600 text-white"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="panel-url" className="text-gray-300">Panel URL</Label>
+                    <Input 
+                      id="panel-url" 
+                      defaultValue="https://panel.nextgenhosting.net"
+                      className="bg-gray-700 border-gray-600 text-white"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="discord-url" className="text-gray-300">Discord URL</Label>
+                    <Input 
+                      id="discord-url" 
+                      defaultValue="https://discord.gg/nextgenhosting"
+                      className="bg-gray-700 border-gray-600 text-white"
+                    />
+                  </div>
+                  
+                  <Button className="bg-gradient-to-r from-red-600 to-blue-600 hover:from-red-500 hover:to-blue-500">
+                    Save Settings
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+      
+      <Footer />
+    </div>
+  );
+};
+
+export default AdminPanel;
