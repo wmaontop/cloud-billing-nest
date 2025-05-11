@@ -21,6 +21,10 @@ import Pricing from "./pages/Pricing";
 import ServerPurchase from "./pages/ServerPurchase";
 import AdminPanel from "./pages/AdminPanel";
 import CustomVps from "./pages/CustomVps";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
+import RefundPolicy from "./pages/RefundPolicy";
+import Legal from "./pages/Legal";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 
@@ -63,6 +67,10 @@ const App = () => (
             <Route path="/web-hosting" element={<WebHosting />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/refund" element={<RefundPolicy />} />
+            <Route path="/legal" element={<Legal />} />
             <Route path="/purchase/:type/:plan" element={<ServerPurchase />} />
             <Route path="/admin" element={
               <AdminRoute>

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,7 +23,8 @@ import {
   Shield, 
   Settings, 
   Globe,
-  ArrowRightLeft
+  ArrowRightLeft,
+  Folder
 } from "lucide-react";
 
 const CustomVps = () => {
@@ -879,194 +880,3 @@ const CustomVps = () => {
                               Restore
                             </Button>
                             <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300">
-                              Delete
-                            </Button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            Manual Backup - Initial Setup
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            1.2 GB
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            Apr 28, 2025
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <Badge className="bg-purple-900/30 text-purple-400 border-purple-500/50">
-                              Manual
-                            </Badge>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              className="border-blue-500 text-blue-400 hover:bg-blue-500/20"
-                            >
-                              Download
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              className="border-green-500 text-green-400 hover:bg-green-500/20"
-                            >
-                              Restore
-                            </Button>
-                            <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300">
-                              Delete
-                            </Button>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="settings" className="mt-6">
-            <Card className="bg-gray-800 border-red-500/20">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Settings className="h-5 w-5 mr-2 text-yellow-400" />
-                  Server Settings
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  Configure your VPS settings
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Card className="bg-gray-700 border-gray-600">
-                      <CardHeader className="pb-2">
-                        <CardTitle>Server Information</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">Hostname</span>
-                            <span>vps-nextgen-01</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">Operating System</span>
-                            <span>Ubuntu 22.04 LTS</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">Kernel Version</span>
-                            <span>5.15.0-89-generic</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">CPU Model</span>
-                            <span>AMD EPYC-Milan Processor</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">Location</span>
-                            <span>US East (New York)</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">Created</span>
-                            <span>Apr 26, 2025</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card className="bg-gray-700 border-gray-600">
-                      <CardHeader className="pb-2">
-                        <CardTitle>Authentication</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <Label>Root Password</Label>
-                            <div className="flex space-x-2">
-                              <Input 
-                                type="password" 
-                                value="••••••••••••" 
-                                className="bg-gray-800 border-gray-600 text-white" 
-                                disabled
-                              />
-                              <Button 
-                                variant="outline"
-                                className="border-blue-500 text-blue-400 hover:bg-blue-500/20"
-                              >
-                                Change
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <Label>SSH Keys</Label>
-                            <div className="p-3 bg-gray-800 rounded-md text-sm text-gray-300">
-                              ssh-rsa AAAAB3NzaC1yc2EAAAADA... user@example.com
-                            </div>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              className="border-blue-500 text-blue-400 hover:bg-blue-500/20"
-                            >
-                              Add SSH Key
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                  
-                  <Card className="bg-gray-700 border-gray-600">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="flex items-center">
-                        <Shield className="h-5 w-5 mr-2 text-red-400" />
-                        Security Settings
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-medium">DDoS Protection</div>
-                            <div className="text-sm text-gray-400">Advanced protection against DDoS attacks</div>
-                          </div>
-                          <Badge className="bg-green-900/30 text-green-400 border-green-500/50">
-                            Enabled
-                          </Badge>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-medium">Automatic Security Updates</div>
-                            <div className="text-sm text-gray-400">Keep your server secure with automatic updates</div>
-                          </div>
-                          <Badge className="bg-green-900/30 text-green-400 border-green-500/50">
-                            Enabled
-                          </Badge>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-medium">Fail2Ban</div>
-                            <div className="text-sm text-gray-400">Protection against brute force attacks</div>
-                          </div>
-                          <Badge className="bg-green-900/30 text-green-400 border-green-500/50">
-                            Enabled
-                          </Badge>
-                        </div>
-                        <Button className="w-full bg-gradient-to-r from-red-600 to-blue-600 hover:from-red-500 hover:to-blue-500">
-                          Security Scan
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
-      
-      <Footer />
-    </div>
-  );
-};
-
-export default CustomVps;

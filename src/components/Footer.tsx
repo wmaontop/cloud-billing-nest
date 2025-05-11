@@ -10,10 +10,10 @@ const Footer = () => {
           <div className="space-y-4">
             <Link to="/" className="flex items-center space-x-2">
               <Server className="h-6 w-6 text-primary" />
-              <span className="text-xl font-semibold">CloudHost</span>
+              <span className="text-xl font-semibold">NextGen Hosting</span>
             </Link>
             <p className="text-sm text-muted-foreground">
-              Reliable hosting solutions powered by Pterodactyl. Fast, secure, and
+              Reliable hosting solutions for your game servers and websites. Fast, secure, and
               always available.
             </p>
           </div>
@@ -84,12 +84,14 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/careers"
+                <a
+                  href="https://discord.gg/nextgenhosting"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-primary"
                 >
-                  Careers
-                </Link>
+                  Discord
+                </a>
               </li>
             </ul>
           </div>
@@ -135,7 +137,7 @@ const Footer = () => {
         
         <div className="mt-12 border-t pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} CloudHost. All rights reserved.
+            © {new Date().getFullYear()} NextGen Hosting. All rights reserved.
           </p>
           <div className="flex space-x-4 mt-4 md:mt-0">
             <a
@@ -147,7 +149,7 @@ const Footer = () => {
               Twitter
             </a>
             <a
-              href="https://discord.com"
+              href="https://discord.gg/nextgenhosting"
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-primary"
