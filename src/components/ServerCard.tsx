@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Server as ServerType } from "@/lib/types";
 import { Server as ServerIcon, Power, Settings } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { sendPowerAction } from "@/lib/pterodactyl-api";
 
 interface ServerCardProps {
   server: ServerType;
@@ -30,29 +31,21 @@ const ServerCard = ({ server }: ServerCardProps) => {
     const action = serverStatus === "running" ? "stop" : "start";
     
     try {
-      // Get the stored API settings
-      const apiSettings = localStorage.getItem('ngHostingApiSettings');
-      if (!apiSettings) {
-        throw new Error("API settings not found");
+      // Call the API function to send power action
+      const success = await sendPowerAction(server.id, action as "start" | "stop");
+      
+      if (success) {
+        // Update server status
+        const newStatus = action === "start" ? "running" : "stopped";
+        setServerStatus(newStatus);
+        
+        toast({
+          title: `Server ${action === "start" ? "started" : "stopped"}`,
+          description: `Your server "${server.name}" has been ${action === "start" ? "started" : "stopped"} successfully.`,
+        });
+      } else {
+        throw new Error(`Failed to ${action} server`);
       }
-      
-      const { apiUrl, apiKey } = JSON.parse(apiSettings);
-      
-      // In a production environment, this would call the Pterodactyl API
-      // For now, we'll simulate the API call
-      console.log(`Sending ${action} action to server ${server.id} via Pterodactyl API`);
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Update server status
-      const newStatus = action === "start" ? "running" : "stopped";
-      setServerStatus(newStatus);
-      
-      toast({
-        title: `Server ${action === "start" ? "started" : "stopped"}`,
-        description: `Your server "${server.name}" has been ${action === "start" ? "started" : "stopped"} successfully.`,
-      });
     } catch (error) {
       console.error("Error with server action:", error);
       toast({

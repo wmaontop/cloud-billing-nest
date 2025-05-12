@@ -8,13 +8,16 @@ import { Label } from "@/components/ui/label";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
-import { Server, Shield, Users, Database, Settings, CreditCard } from "lucide-react";
-import { getEggs, getServers } from "@/lib/pterodactyl-api";
+import { Server, Shield, Users, Database, Settings, CreditCard, Trash, Edit } from "lucide-react";
+import { getEggs, getServers, createServer } from "@/lib/pterodactyl-api";
 import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const AdminPanel = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  
   const [users, setUsers] = useState(() => {
     const storedUsers = localStorage.getItem('ngHostingUsers');
     return storedUsers ? JSON.parse(storedUsers) : [];
@@ -28,6 +31,11 @@ const AdminPanel = () => {
   // API settings
   const [apiKey, setApiKey] = useState("");
   const [apiUrl, setApiUrl] = useState("");
+
+  // Panel settings
+  const [panelName, setPanelName] = useState("NextGen Hosting");
+  const [panelUrl, setPanelUrl] = useState("https://panel.nextgenhosting.net");
+  const [discordUrl, setDiscordUrl] = useState("https://discord.gg/nextgenhosting");
   
   // Load API settings from localStorage
   useEffect(() => {
@@ -41,6 +49,15 @@ const AdminPanel = () => {
       // Default values
       setApiKey("ptla_Zmu6YYkofIx0zhZn4BO2WFg7Lvp1X9m1I2lc4rHoOvg");
       setApiUrl("https://gamepanel.nextgenhosting.net");
+    }
+
+    // Load panel settings
+    const storedPanelSettings = localStorage.getItem('ngHostingPanelSettings');
+    if (storedPanelSettings) {
+      const settings = JSON.parse(storedPanelSettings);
+      setPanelName(settings.panelName || "NextGen Hosting");
+      setPanelUrl(settings.panelUrl || "https://panel.nextgenhosting.net");
+      setDiscordUrl(settings.discordUrl || "https://discord.gg/nextgenhosting");
     }
   }, []);
   
@@ -59,6 +76,11 @@ const AdminPanel = () => {
       setServers(serverData);
     } catch (error) {
       console.error("Error fetching servers:", error);
+      toast({
+        title: "Error fetching servers",
+        description: "Please check your API settings and try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoadingServers(false);
     }
@@ -71,6 +93,11 @@ const AdminPanel = () => {
       setEggs(eggData);
     } catch (error) {
       console.error("Error fetching eggs:", error);
+      toast({
+        title: "Error fetching templates",
+        description: "Please check your API settings and try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoadingEggs(false);
     }
@@ -88,6 +115,68 @@ const AdminPanel = () => {
     fetchServers();
     fetchEggs();
   };
+
+  const handleSavePanelSettings = () => {
+    localStorage.setItem('ngHostingPanelSettings', JSON.stringify({ 
+      panelName,
+      panelUrl,
+      discordUrl
+    }));
+    
+    toast({
+      title: "Panel settings saved",
+      description: "Your NextGen Hosting panel settings have been saved successfully.",
+    });
+  };
+
+  const handleEditUser = (userId) => {
+    // In a real app, this would open a modal for editing
+    toast({
+      title: "Edit user",
+      description: "User editing functionality would open here.",
+    });
+  };
+
+  const handleDeleteUser = (userId, email) => {
+    // Remove user from local state
+    const updatedUsers = users.filter(user => user.email !== email);
+    setUsers(updatedUsers);
+    
+    // Update localStorage
+    localStorage.setItem('ngHostingUsers', JSON.stringify(updatedUsers));
+    
+    toast({
+      title: "User deleted",
+      description: `User ${email} has been deleted successfully.`,
+    });
+  };
+
+  const handleEditEgg = (eggId) => {
+    // In a real app, this would open a modal for editing
+    toast({
+      title: "Edit template",
+      description: "Template editing functionality would open here.",
+    });
+  };
+
+  const handleEditPricePlan = (plan) => {
+    toast({
+      title: "Edit pricing plan",
+      description: `Editing ${plan} pricing plan.`,
+    });
+  };
+
+  const handleConfigurePayPal = () => {
+    toast({
+      title: "Configure PayPal",
+      description: "PayPal integration configuration would open here.",
+    });
+  };
+
+  // Navigate to Custom VPS page
+  const goToCustomVPS = () => {
+    navigate('/custom-vps');
+  };
   
   // Calculate total monthly revenue (simplified calculation)
   const calculateMonthlyRevenue = () => {
@@ -104,9 +193,18 @@ const AdminPanel = () => {
             <h1 className="text-3xl font-bold text-white mb-2">Admin Panel</h1>
             <p className="text-gray-400">Welcome back, {user?.firstName} {user?.lastName}</p>
           </div>
-          <div className="flex items-center space-x-2 bg-gray-800 px-4 py-2 rounded-md">
-            <Shield className="h-5 w-5 text-blue-400" />
-            <span className="text-blue-400 font-medium">Administrator</span>
+          <div className="flex items-center space-x-4">
+            <Button 
+              variant="outline" 
+              className="bg-gray-800 text-white border-gray-700 hover:bg-gray-700"
+              onClick={goToCustomVPS}
+            >
+              Custom VPS Panel
+            </Button>
+            <div className="flex items-center space-x-2 bg-gray-800 px-4 py-2 rounded-md">
+              <Shield className="h-5 w-5 text-blue-400" />
+              <span className="text-blue-400 font-medium">Administrator</span>
+            </div>
           </div>
         </div>
         
@@ -256,11 +354,21 @@ const AdminPanel = () => {
                               }
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                              <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
-                                Edit
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-blue-400 hover:text-blue-300"
+                                onClick={() => handleEditUser(index)}
+                              >
+                                <Edit className="h-4 w-4 mr-1" /> Edit
                               </Button>
-                              <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300">
-                                Delete
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-red-400 hover:text-red-300"
+                                onClick={() => handleDeleteUser(index, user.email)}
+                              >
+                                <Trash className="h-4 w-4 mr-1" /> Delete
                               </Button>
                             </td>
                           </tr>
@@ -364,8 +472,13 @@ const AdminPanel = () => {
                                 Nest #{egg.nest}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
-                                  Edit
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="text-blue-400 hover:text-blue-300"
+                                  onClick={() => handleEditEgg(egg.id)}
+                                >
+                                  <Edit className="h-4 w-4 mr-1" /> Edit
                                 </Button>
                               </td>
                             </tr>
@@ -407,7 +520,12 @@ const AdminPanel = () => {
                         <p className="text-sm text-gray-400">Enable PayPal payments</p>
                       </div>
                     </div>
-                    <Button className="bg-blue-600 hover:bg-blue-500">Configure</Button>
+                    <Button 
+                      onClick={handleConfigurePayPal}
+                      className="bg-blue-600 hover:bg-blue-500"
+                    >
+                      Configure
+                    </Button>
                   </div>
                   
                   <div className="space-y-4">
@@ -434,8 +552,13 @@ const AdminPanel = () => {
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">20 GB</td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">$5.99/mo</td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                              <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
-                                Edit
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-blue-400 hover:text-blue-300"
+                                onClick={() => handleEditPricePlan('Starter')}
+                              >
+                                <Edit className="h-4 w-4 mr-1" /> Edit
                               </Button>
                             </td>
                           </tr>
@@ -448,8 +571,13 @@ const AdminPanel = () => {
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">50 GB</td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">$12.99/mo</td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                              <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
-                                Edit
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-blue-400 hover:text-blue-300"
+                                onClick={() => handleEditPricePlan('Standard')}
+                              >
+                                <Edit className="h-4 w-4 mr-1" /> Edit
                               </Button>
                             </td>
                           </tr>
@@ -462,8 +590,13 @@ const AdminPanel = () => {
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">100 GB</td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">$24.99/mo</td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                              <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
-                                Edit
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-blue-400 hover:text-blue-300"
+                                onClick={() => handleEditPricePlan('Premium')}
+                              >
+                                <Edit className="h-4 w-4 mr-1" /> Edit
                               </Button>
                             </td>
                           </tr>
@@ -490,7 +623,8 @@ const AdminPanel = () => {
                     <Label htmlFor="panel-name" className="text-gray-300">Panel Name</Label>
                     <Input 
                       id="panel-name" 
-                      defaultValue="NextGen Hosting"
+                      value={panelName}
+                      onChange={(e) => setPanelName(e.target.value)}
                       className="bg-gray-700 border-gray-600 text-white"
                     />
                   </div>
@@ -499,7 +633,8 @@ const AdminPanel = () => {
                     <Label htmlFor="panel-url" className="text-gray-300">Panel URL</Label>
                     <Input 
                       id="panel-url" 
-                      defaultValue="https://panel.nextgenhosting.net"
+                      value={panelUrl}
+                      onChange={(e) => setPanelUrl(e.target.value)}
                       className="bg-gray-700 border-gray-600 text-white"
                     />
                   </div>
@@ -508,12 +643,16 @@ const AdminPanel = () => {
                     <Label htmlFor="discord-url" className="text-gray-300">Discord URL</Label>
                     <Input 
                       id="discord-url" 
-                      defaultValue="https://discord.gg/nextgenhosting"
+                      value={discordUrl}
+                      onChange={(e) => setDiscordUrl(e.target.value)}
                       className="bg-gray-700 border-gray-600 text-white"
                     />
                   </div>
                   
-                  <Button className="bg-gradient-to-r from-red-600 to-blue-600 hover:from-red-500 hover:to-blue-500">
+                  <Button 
+                    onClick={handleSavePanelSettings}
+                    className="bg-gradient-to-r from-red-600 to-blue-600 hover:from-red-500 hover:to-blue-500"
+                  >
                     Save Settings
                   </Button>
                 </div>
