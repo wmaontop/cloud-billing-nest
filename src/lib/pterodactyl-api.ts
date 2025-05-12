@@ -46,6 +46,50 @@ export const getApiConfig = (): PterodactylApiConfig => {
 };
 
 /**
+ * Sync servers from the Pterodactyl panel and save to localStorage
+ */
+export const syncServersFromPanel = async (): Promise<boolean> => {
+  try {
+    const { apiUrl, apiKey } = getApiConfig();
+    
+    // In a real production environment, this would make an actual API call
+    // For development, we'll simulate syncing by generating sample servers
+    
+    // Generate sample servers based on eggs
+    const eggs = await getEggs();
+    const servers = [];
+    
+    for (let i = 0; i < eggs.length; i++) {
+      const egg = eggs[i];
+      const serverId = `server${i + 1}`;
+      const ipOctet3 = Math.floor(Math.random() * 255);
+      const ipOctet4 = Math.floor(Math.random() * 255);
+      
+      servers.push({
+        id: serverId,
+        name: `${egg.name} Server`,
+        status: Math.random() > 0.5 ? 'running' : 'stopped',
+        cpu: 1 + Math.floor(Math.random() * 4), // 1-4 cores
+        ram: 1 + Math.floor(Math.random() * 8), // 1-8 GB
+        disk: 20 + Math.floor(Math.random() * 80), // 20-100 GB
+        ip: `192.168.${ipOctet3}.${ipOctet4}`,
+        pterodactylId: `ptero-${serverId}`,
+        planId: ['starter', 'standard', 'premium'][Math.floor(Math.random() * 3)],
+        created_at: new Date().toISOString()
+      });
+    }
+    
+    // Save the synchronized servers to localStorage
+    localStorage.setItem('ngHostingServers', JSON.stringify(servers));
+    
+    return true;
+  } catch (error) {
+    console.error('Error syncing servers from panel:', error);
+    return false;
+  }
+};
+
+/**
  * Get all servers from the Pterodactyl panel
  */
 export const getServers = async (): Promise<any[]> => {
@@ -53,15 +97,18 @@ export const getServers = async (): Promise<any[]> => {
     const { apiUrl, apiKey } = getApiConfig();
     
     // In production, this would be a real API call
-    // For development, we'll simulate getting servers from localStorage
+    // For development, we'll get servers from localStorage
     const storedServers = localStorage.getItem('ngHostingServers');
     
     if (storedServers) {
       return JSON.parse(storedServers);
     }
     
-    // Return empty array if no servers found
-    return [];
+    // If no servers in localStorage, sync from panel
+    await syncServersFromPanel();
+    
+    const newStoredServers = localStorage.getItem('ngHostingServers');
+    return newStoredServers ? JSON.parse(newStoredServers) : [];
   } catch (error) {
     console.error('Error fetching servers:', error);
     return [];
@@ -94,6 +141,8 @@ export const createServer = async (params: ServerCreationParams): Promise<any> =
       disk: params.limits.disk / 1024, // Convert MB to GB
       ip: `192.168.${ipOctet3}.${ipOctet4}`,
       created_at: new Date().toISOString(),
+      pterodactylId: `ptero-${newServerId}`,
+      planId: "custom"
     };
     
     // Add to localStorage
@@ -142,6 +191,18 @@ export const getEggs = async (): Promise<any[]> => {
         name: "Rust",
         nest: 3,
         docker_image: "ghcr.io/pterodactyl/games:rust",
+      },
+      {
+        id: 5,
+        name: "CS:GO",
+        nest: 4,
+        docker_image: "ghcr.io/pterodactyl/games:source",
+      },
+      {
+        id: 6,
+        name: "ARK: Survival Evolved",
+        nest: 5,
+        docker_image: "ghcr.io/pterodactyl/games:ark",
       },
     ];
   } catch (error) {

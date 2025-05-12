@@ -1,4 +1,5 @@
 
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,34 +8,36 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ServerCard from "@/components/ServerCard";
 import { Server, Invoice, Transaction } from "@/lib/types";
-import { CreditCard, Server as ServerIcon, Plus, Database, Activity } from "lucide-react";
+import { CreditCard, Server as ServerIcon, Plus, Database, Activity, RefreshCw } from "lucide-react";
+import { getServers } from "@/lib/pterodactyl-api";
+import { useToast } from "@/components/ui/use-toast";
 
 const Dashboard = () => {
-  // Mock data
-  const servers: Server[] = [
-    {
-      id: "server1",
-      name: "Minecraft Server",
-      status: "running",
-      cpu: 2,
-      ram: 4,
-      disk: 50,
-      ip: "123.456.789.0",
-      pterodactylId: "ptero1",
-      planId: "standard"
-    },
-    {
-      id: "server2",
-      name: "Web Server",
-      status: "stopped",
-      cpu: 1,
-      ram: 2,
-      disk: 20,
-      ip: "123.456.789.1",
-      pterodactylId: "ptero2",
-      planId: "starter"
+  const [servers, setServers] = useState<Server[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  // Fetch servers on component mount
+  useEffect(() => {
+    fetchServers();
+  }, []);
+
+  const fetchServers = async () => {
+    setIsLoading(true);
+    try {
+      const fetchedServers = await getServers();
+      setServers(fetchedServers);
+    } catch (error) {
+      console.error("Error fetching servers:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load servers. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  };
 
   const invoices: Invoice[] = [
     {
@@ -153,19 +156,47 @@ const Dashboard = () => {
           <TabsContent value="servers" className="mt-6">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">Your Servers</h2>
-              <Link to="/servers/new">
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Server
+              <div className="flex gap-4">
+                <Button variant="outline" onClick={fetchServers} disabled={isLoading}>
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+                  {isLoading ? "Refreshing..." : "Refresh"}
                 </Button>
-              </Link>
+                <Link to="/servers/new">
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Server
+                  </Button>
+                </Link>
+              </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {servers.map((server) => (
-                <ServerCard key={server.id} server={server} />
-              ))}
-            </div>
+            {servers.length === 0 && !isLoading ? (
+              <Card>
+                <CardContent className="pt-6 text-center">
+                  <p className="text-muted-foreground mb-4">You don't have any servers yet</p>
+                  <Link to="/servers/new">
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Your First Server
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {isLoading ? (
+                  <Card>
+                    <CardContent className="pt-6 flex justify-center">
+                      <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+                    </CardContent>
+                  </Card>
+                ) : (
+                  servers.map((server) => (
+                    <ServerCard key={server.id} server={server} />
+                  ))
+                )}
+              </div>
+            )}
           </TabsContent>
           
           <TabsContent value="billing" className="mt-6">

@@ -8,8 +8,8 @@ import { Label } from "@/components/ui/label";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
-import { Server, Shield, Users, Database, Settings, CreditCard, Trash, Edit } from "lucide-react";
-import { getEggs, getServers, createServer } from "@/lib/pterodactyl-api";
+import { Server, Shield, Users, Database, Settings, CreditCard, Trash, Edit, RefreshCw } from "lucide-react";
+import { getEggs, getServers, createServer, syncServersFromPanel } from "@/lib/pterodactyl-api";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -27,6 +27,7 @@ const AdminPanel = () => {
   const [eggs, setEggs] = useState([]);
   const [isLoadingServers, setIsLoadingServers] = useState(false);
   const [isLoadingEggs, setIsLoadingEggs] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   
   // API settings
   const [apiKey, setApiKey] = useState("");
@@ -100,6 +101,35 @@ const AdminPanel = () => {
       });
     } finally {
       setIsLoadingEggs(false);
+    }
+  };
+
+  const handleSyncFromPanel = async () => {
+    setIsSyncing(true);
+    try {
+      const success = await syncServersFromPanel();
+      
+      if (success) {
+        // Refresh the server list
+        const serverData = await getServers();
+        setServers(serverData);
+        
+        toast({
+          title: "Servers synchronized",
+          description: "All servers have been successfully synchronized from the Pterodactyl panel.",
+        });
+      } else {
+        throw new Error('Failed to sync servers');
+      }
+    } catch (error) {
+      console.error("Error syncing servers:", error);
+      toast({
+        title: "Sync failed",
+        description: "Failed to synchronize servers from the Pterodactyl panel. Please check your API settings and try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSyncing(false);
     }
   };
   
@@ -248,6 +278,16 @@ const AdminPanel = () => {
                 <CardContent>
                   <div className="text-2xl font-bold">{servers.length}</div>
                   <p className="text-gray-400">Active servers</p>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="mt-2 text-blue-400 border-blue-400 hover:bg-blue-900/20"
+                    onClick={handleSyncFromPanel}
+                    disabled={isSyncing}
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? "animate-spin" : ""}`} />
+                    {isSyncing ? "Syncing..." : "Sync from Panel"}
+                  </Button>
                 </CardContent>
               </Card>
               
@@ -388,7 +428,7 @@ const AdminPanel = () => {
           </TabsContent>
           
           <TabsContent value="servers">
-            <Card className="bg-gray-800 border-red-500/20">
+            <Card className="bg-gray-800 border-red-500/20 mb-6">
               <CardHeader>
                 <CardTitle>NextGen Panel API Settings</CardTitle>
                 <CardDescription className="text-gray-400">
@@ -418,84 +458,161 @@ const AdminPanel = () => {
                       This key is used to create and manage servers on your NextGen panel.
                     </p>
                   </div>
-                  <Button 
-                    onClick={handleSaveApiSettings}
-                    className="bg-gradient-to-r from-red-600 to-blue-600 hover:from-red-500 hover:to-blue-500"
-                  >
-                    Save API Settings
-                  </Button>
+                  <div className="flex space-x-4">
+                    <Button 
+                      onClick={handleSaveApiSettings}
+                      className="bg-gradient-to-r from-red-600 to-blue-600 hover:from-red-500 hover:to-blue-500"
+                    >
+                      Save API Settings
+                    </Button>
+                    <Button 
+                      onClick={handleSyncFromPanel}
+                      variant="outline"
+                      className="border-blue-500 text-blue-400 hover:bg-blue-900/20"
+                      disabled={isSyncing || !apiKey || !apiUrl}
+                    >
+                      <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? "animate-spin" : ""}`} />
+                      {isSyncing ? "Syncing Servers..." : "Sync All Servers From Panel"}
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
             
-            <div className="mt-6">
-              <Card className="bg-gray-800 border-red-500/20">
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <div>
-                    <CardTitle>Server Templates</CardTitle>
-                    <CardDescription className="text-gray-400">
-                      Configure game server templates
-                    </CardDescription>
-                  </div>
-                  <Button 
-                    onClick={fetchEggs}
-                    variant="outline" 
-                    size="sm"
-                    className="text-blue-400 border-blue-400"
-                    disabled={isLoadingEggs}
-                  >
-                    {isLoadingEggs ? "Syncing..." : "Sync Templates"}
-                  </Button>
-                </CardHeader>
-                <CardContent>
-                  <div className="rounded-md border border-gray-700">
-                    <table className="min-w-full divide-y divide-gray-700">
-                      <thead className="bg-gray-700">
+            <Card className="bg-gray-800 border-red-500/20 mb-6">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Servers</CardTitle>
+                  <CardDescription className="text-gray-400">
+                    Manage all synchronized servers
+                  </CardDescription>
+                </div>
+                <Button 
+                  onClick={fetchServers}
+                  variant="outline" 
+                  size="sm"
+                  className="text-blue-400 border-blue-400"
+                  disabled={isLoadingServers}
+                >
+                  {isLoadingServers ? "Refreshing..." : "Refresh Servers"}
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border border-gray-700">
+                  <table className="min-w-full divide-y divide-gray-700">
+                    <thead className="bg-gray-700">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Name</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">CPU</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">RAM</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Storage</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">IP</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-gray-800 divide-y divide-gray-700">
+                      {servers.length > 0 ? (
+                        servers.map((server: any, index: number) => (
+                          <tr key={index}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                              {server.name}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                              <span className={`px-2 py-1 text-xs rounded-full ${
+                                server.status === "running" 
+                                  ? "bg-green-900/50 text-green-300" 
+                                  : server.status === "starting" || server.status === "stopping"
+                                    ? "bg-yellow-900/50 text-yellow-300"
+                                    : "bg-red-900/50 text-red-300"
+                              }`}>
+                                {server.status.charAt(0).toUpperCase() + server.status.slice(1)}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{server.cpu} vCores</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{server.ram} GB</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{server.disk} GB</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{server.ip}</td>
+                          </tr>
+                        ))
+                      ) : (
                         <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Game</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Egg</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Nest</th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                          <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-400">
+                            {isLoadingServers ? "Loading servers..." : "No servers found"}
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody className="bg-gray-800 divide-y divide-gray-700">
-                        {eggs.length > 0 ? (
-                          eggs.map((egg: any, index: number) => (
-                            <tr key={index}>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                {egg.name.split(' ')[0]}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                {egg.name}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                Nest #{egg.nest}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  className="text-blue-400 hover:text-blue-300"
-                                  onClick={() => handleEditEgg(egg.id)}
-                                >
-                                  <Edit className="h-4 w-4 mr-1" /> Edit
-                                </Button>
-                              </td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-400">
-                              {isLoadingEggs ? "Loading templates..." : "No templates found"}
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gray-800 border-red-500/20">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Server Templates</CardTitle>
+                  <CardDescription className="text-gray-400">
+                    Configure game server templates
+                  </CardDescription>
+                </div>
+                <Button 
+                  onClick={fetchEggs}
+                  variant="outline" 
+                  size="sm"
+                  className="text-blue-400 border-blue-400"
+                  disabled={isLoadingEggs}
+                >
+                  {isLoadingEggs ? "Syncing..." : "Sync Templates"}
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border border-gray-700">
+                  <table className="min-w-full divide-y divide-gray-700">
+                    <thead className="bg-gray-700">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Game</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Egg</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Nest</th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-gray-800 divide-y divide-gray-700">
+                      {eggs.length > 0 ? (
+                        eggs.map((egg: any, index: number) => (
+                          <tr key={index}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                              {egg.name.split(' ')[0]}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                              {egg.name}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                              Nest #{egg.nest}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-blue-400 hover:text-blue-300"
+                                onClick={() => handleEditEgg(egg.id)}
+                              >
+                                <Edit className="h-4 w-4 mr-1" /> Edit
+                              </Button>
                             </td>
                           </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-400">
+                            {isLoadingEggs ? "Loading templates..." : "No templates found"}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
           
           <TabsContent value="billing">

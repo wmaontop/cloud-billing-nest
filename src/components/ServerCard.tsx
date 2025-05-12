@@ -36,13 +36,39 @@ const ServerCard = ({ server }: ServerCardProps) => {
       
       if (success) {
         // Update server status
-        const newStatus = action === "start" ? "running" : "stopped";
-        setServerStatus(newStatus);
-        
-        toast({
-          title: `Server ${action === "start" ? "started" : "stopped"}`,
-          description: `Your server "${server.name}" has been ${action === "start" ? "started" : "stopped"} successfully.`,
-        });
+        if (action === "start") {
+          // Simulate a starting state briefly
+          setServerStatus("starting");
+          toast({
+            title: "Server starting",
+            description: `Your server "${server.name}" is starting up. Please wait...`,
+          });
+          
+          // After a delay, update to running state
+          setTimeout(() => {
+            setServerStatus("running");
+            toast({
+              title: "Server started",
+              description: `Your server "${server.name}" has been started successfully.`,
+            });
+          }, 2000);
+        } else {
+          // Simulate a stopping state briefly
+          setServerStatus("stopping");
+          toast({
+            title: "Server stopping",
+            description: `Your server "${server.name}" is shutting down. Please wait...`,
+          });
+          
+          // After a delay, update to stopped state
+          setTimeout(() => {
+            setServerStatus("stopped");
+            toast({
+              title: "Server stopped",
+              description: `Your server "${server.name}" has been stopped successfully.`,
+            });
+          }, 2000);
+        }
       } else {
         throw new Error(`Failed to ${action} server`);
       }
@@ -66,7 +92,7 @@ const ServerCard = ({ server }: ServerCardProps) => {
           <CardTitle className="text-lg">{server.name}</CardTitle>
         </div>
         <Badge
-          className={`${statusColors[serverStatus]} text-white`}
+          className={`${statusColors[serverStatus as keyof typeof statusColors] || "bg-gray-500"} text-white`}
           variant="outline"
         >
           {serverStatus.charAt(0).toUpperCase() + serverStatus.slice(1)}
@@ -103,10 +129,18 @@ const ServerCard = ({ server }: ServerCardProps) => {
           variant={serverStatus === "running" ? "destructive" : "default"}
           size="sm"
           onClick={handlePowerAction}
-          disabled={isLoading}
+          disabled={isLoading || serverStatus === "starting" || serverStatus === "stopping"}
         >
           <Power className="h-4 w-4 mr-2" />
-          {isLoading ? "Processing..." : serverStatus === "running" ? "Stop" : "Start"}
+          {isLoading 
+            ? "Processing..." 
+            : serverStatus === "running" 
+              ? "Stop" 
+              : serverStatus === "stopped" 
+                ? "Start" 
+                : serverStatus === "starting" 
+                  ? "Starting..." 
+                  : "Stopping..."}
         </Button>
       </CardFooter>
     </Card>
