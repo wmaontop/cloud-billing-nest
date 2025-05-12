@@ -4,6 +4,9 @@
  * This file handles communication with the Pterodactyl panel API
  */
 
+// Set the default Pterodactyl panel URL
+const DEFAULT_PANEL_URL = "http://104.234.107.159";
+
 export interface PterodactylApiConfig {
   apiUrl: string;
   apiKey: string;
@@ -38,8 +41,16 @@ export interface ServerCreationParams {
  */
 export const getApiConfig = (): PterodactylApiConfig => {
   const apiSettings = localStorage.getItem('ngHostingApiSettings');
+  
   if (!apiSettings) {
-    throw new Error('API settings not configured');
+    // If no settings found, create default settings with the provided panel URL
+    const defaultSettings = {
+      apiUrl: DEFAULT_PANEL_URL,
+      apiKey: "ptla_Zmu6YYkofIx0zhZn4BO2WFg7Lvp1X9m1I2lc4rHoOvg"
+    };
+    
+    localStorage.setItem('ngHostingApiSettings', JSON.stringify(defaultSettings));
+    return defaultSettings;
   }
   
   return JSON.parse(apiSettings);
@@ -72,7 +83,7 @@ export const syncServersFromPanel = async (): Promise<boolean> => {
         cpu: 1 + Math.floor(Math.random() * 4), // 1-4 cores
         ram: 1 + Math.floor(Math.random() * 8), // 1-8 GB
         disk: 20 + Math.floor(Math.random() * 80), // 20-100 GB
-        ip: `192.168.${ipOctet3}.${ipOctet4}`,
+        ip: `104.234.107.${ipOctet4}`,
         pterodactylId: `ptero-${serverId}`,
         planId: ['starter', 'standard', 'premium'][Math.floor(Math.random() * 3)],
         created_at: new Date().toISOString()
@@ -129,7 +140,6 @@ export const createServer = async (params: ServerCreationParams): Promise<any> =
     
     // Generate a random ID and IP address
     const newServerId = Math.floor(Math.random() * 10000).toString();
-    const ipOctet3 = Math.floor(Math.random() * 255);
     const ipOctet4 = Math.floor(Math.random() * 255);
     
     const newServer = {
@@ -139,7 +149,7 @@ export const createServer = async (params: ServerCreationParams): Promise<any> =
       cpu: params.limits.cpu / 100, // Convert percentage to vCores
       ram: params.limits.memory / 1024, // Convert MB to GB
       disk: params.limits.disk / 1024, // Convert MB to GB
-      ip: `192.168.${ipOctet3}.${ipOctet4}`,
+      ip: `104.234.107.${ipOctet4}`,
       created_at: new Date().toISOString(),
       pterodactylId: `ptero-${newServerId}`,
       planId: "custom"
@@ -203,6 +213,24 @@ export const getEggs = async (): Promise<any[]> => {
         name: "ARK: Survival Evolved",
         nest: 5,
         docker_image: "ghcr.io/pterodactyl/games:ark",
+      },
+      {
+        id: 7,
+        name: "Terraria",
+        nest: 6,
+        docker_image: "ghcr.io/pterodactyl/yolks:mono",
+      },
+      {
+        id: 8,
+        name: "TeamSpeak 3",
+        nest: 7,
+        docker_image: "ghcr.io/pterodactyl/voice:teamspeak",
+      },
+      {
+        id: 9,
+        name: "Mumble",
+        nest: 7,
+        docker_image: "ghcr.io/pterodactyl/voice:mumble",
       },
     ];
   } catch (error) {
@@ -271,6 +299,35 @@ export const sendPowerAction = async (serverId: string, action: 'start' | 'stop'
     return false;
   } catch (error) {
     console.error('Error sending power action:', error);
+    return false;
+  }
+};
+
+/**
+ * Restart a server
+ */
+export const restartServer = async (serverId: string): Promise<boolean> => {
+  return sendPowerAction(serverId, 'restart');
+};
+
+/**
+ * Delete a server
+ */
+export const deleteServer = async (serverId: string): Promise<boolean> => {
+  try {
+    const storedServers = localStorage.getItem('ngHostingServers');
+    
+    if (storedServers) {
+      const servers = JSON.parse(storedServers);
+      const updatedServers = servers.filter((s: any) => s.id !== serverId);
+      
+      localStorage.setItem('ngHostingServers', JSON.stringify(updatedServers));
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Error deleting server:', error);
     return false;
   }
 };
