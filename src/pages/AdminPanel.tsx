@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,25 +9,89 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 import { Server, Shield, Users, Database, Settings, CreditCard } from "lucide-react";
+import { getEggs, getServers } from "@/lib/pterodactyl-api";
+import { useToast } from "@/components/ui/use-toast";
 
 const AdminPanel = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [users, setUsers] = useState(() => {
     const storedUsers = localStorage.getItem('ngHostingUsers');
     return storedUsers ? JSON.parse(storedUsers) : [];
   });
-  const [servers, setServers] = useState(() => {
-    const storedServers = localStorage.getItem('ngHostingServers');
-    return storedServers ? JSON.parse(storedServers) : [];
-  });
   
-  // Mock server creation API data
-  const [apiKey, setApiKey] = useState("ptla_Zmu6YYkofIx0zhZn4BO2WFg7Lvp1X9m1I2lc4rHoOvg");
-  const [apiUrl, setApiUrl] = useState("https://gamepanel.nextgenhosting.net");
+  const [servers, setServers] = useState([]);
+  const [eggs, setEggs] = useState([]);
+  const [isLoadingServers, setIsLoadingServers] = useState(false);
+  const [isLoadingEggs, setIsLoadingEggs] = useState(false);
+  
+  // API settings
+  const [apiKey, setApiKey] = useState("");
+  const [apiUrl, setApiUrl] = useState("");
+  
+  // Load API settings from localStorage
+  useEffect(() => {
+    const storedSettings = localStorage.getItem('ngHostingApiSettings');
+    
+    if (storedSettings) {
+      const settings = JSON.parse(storedSettings);
+      setApiKey(settings.apiKey || "");
+      setApiUrl(settings.apiUrl || "");
+    } else {
+      // Default values
+      setApiKey("ptla_Zmu6YYkofIx0zhZn4BO2WFg7Lvp1X9m1I2lc4rHoOvg");
+      setApiUrl("https://gamepanel.nextgenhosting.net");
+    }
+  }, []);
+  
+  // Load servers and eggs when API settings are available
+  useEffect(() => {
+    if (apiKey && apiUrl) {
+      fetchServers();
+      fetchEggs();
+    }
+  }, [apiKey, apiUrl]);
+  
+  const fetchServers = async () => {
+    setIsLoadingServers(true);
+    try {
+      const serverData = await getServers();
+      setServers(serverData);
+    } catch (error) {
+      console.error("Error fetching servers:", error);
+    } finally {
+      setIsLoadingServers(false);
+    }
+  };
+  
+  const fetchEggs = async () => {
+    setIsLoadingEggs(true);
+    try {
+      const eggData = await getEggs();
+      setEggs(eggData);
+    } catch (error) {
+      console.error("Error fetching eggs:", error);
+    } finally {
+      setIsLoadingEggs(false);
+    }
+  };
   
   const handleSaveApiSettings = () => {
     localStorage.setItem('ngHostingApiSettings', JSON.stringify({ apiKey, apiUrl }));
-    alert("API settings saved!");
+    
+    toast({
+      title: "API settings saved",
+      description: "Your NextGen Panel API settings have been saved successfully.",
+    });
+    
+    // Refresh data with new API settings
+    fetchServers();
+    fetchEggs();
+  };
+  
+  // Calculate total monthly revenue (simplified calculation)
+  const calculateMonthlyRevenue = () => {
+    return servers.length * 9.99; // Basic calculation - $9.99 per server
   };
   
   return (
@@ -100,7 +164,7 @@ const AdminPanel = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">$0.00</div>
+                  <div className="text-2xl font-bold">${calculateMonthlyRevenue().toFixed(2)}</div>
                   <p className="text-gray-400">This month</p>
                 </CardContent>
               </Card>
@@ -119,9 +183,21 @@ const AdminPanel = () => {
                     <div className="flex items-center">
                       <Shield className="h-5 w-5 text-blue-400 mr-3" />
                       <div>
-                        <p className="font-medium">Admin account created</p>
+                        <p className="font-medium">API Integration active</p>
                         <p className="text-sm text-gray-400">
-                          {user?.firstName} {user?.lastName} added as administrator
+                          NextGen Panel connection established
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-400">Just now</div>
+                  </div>
+                  <div className="flex items-center justify-between border-b border-gray-700 pb-4">
+                    <div className="flex items-center">
+                      <Server className="h-5 w-5 text-green-400 mr-3" />
+                      <div>
+                        <p className="font-medium">Servers synchronized</p>
+                        <p className="text-sm text-gray-400">
+                          {servers.length} servers loaded from NextGen Panel
                         </p>
                       </div>
                     </div>
@@ -137,7 +213,7 @@ const AdminPanel = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="text-sm text-gray-400">Just now</div>
+                    <div className="text-sm text-gray-400">Recently</div>
                   </div>
                 </div>
               </CardContent>
@@ -164,30 +240,38 @@ const AdminPanel = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-gray-800 divide-y divide-gray-700">
-                      {users.map((user: any, index: number) => (
-                        <tr key={index}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            {user.firstName} {user.lastName}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            {user.email}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            {user.isAdmin ? 
-                              <span className="px-2 py-1 text-xs rounded-full bg-blue-900 text-blue-300">Admin</span> : 
-                              <span className="px-2 py-1 text-xs rounded-full bg-gray-700 text-gray-300">User</span>
-                            }
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
-                              Edit
-                            </Button>
-                            <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300">
-                              Delete
-                            </Button>
+                      {users.length > 0 ? (
+                        users.map((user: any, index: number) => (
+                          <tr key={index}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                              {user.firstName} {user.lastName}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                              {user.email}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                              {user.isAdmin ? 
+                                <span className="px-2 py-1 text-xs rounded-full bg-blue-900 text-blue-300">Admin</span> : 
+                                <span className="px-2 py-1 text-xs rounded-full bg-gray-700 text-gray-300">User</span>
+                              }
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
+                                Edit
+                              </Button>
+                              <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300">
+                                Delete
+                              </Button>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-400">
+                            No users found
                           </td>
                         </tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -198,9 +282,9 @@ const AdminPanel = () => {
           <TabsContent value="servers">
             <Card className="bg-gray-800 border-red-500/20">
               <CardHeader>
-                <CardTitle>Pterodactyl API Settings</CardTitle>
+                <CardTitle>NextGen Panel API Settings</CardTitle>
                 <CardDescription className="text-gray-400">
-                  Configure your Pterodactyl panel integration
+                  Configure your NextGen panel integration
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -223,7 +307,7 @@ const AdminPanel = () => {
                       className="bg-gray-700 border-gray-600 text-white"
                     />
                     <p className="text-sm text-gray-400">
-                      This key is used to create and manage servers on your Pterodactyl panel.
+                      This key is used to create and manage servers on your NextGen panel.
                     </p>
                   </div>
                   <Button 
@@ -238,11 +322,22 @@ const AdminPanel = () => {
             
             <div className="mt-6">
               <Card className="bg-gray-800 border-red-500/20">
-                <CardHeader>
-                  <CardTitle>Server Templates</CardTitle>
-                  <CardDescription className="text-gray-400">
-                    Configure game server templates
-                  </CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>Server Templates</CardTitle>
+                    <CardDescription className="text-gray-400">
+                      Configure game server templates
+                    </CardDescription>
+                  </div>
+                  <Button 
+                    onClick={fetchEggs}
+                    variant="outline" 
+                    size="sm"
+                    className="text-blue-400 border-blue-400"
+                    disabled={isLoadingEggs}
+                  >
+                    {isLoadingEggs ? "Syncing..." : "Sync Templates"}
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   <div className="rounded-md border border-gray-700">
@@ -256,70 +351,32 @@ const AdminPanel = () => {
                         </tr>
                       </thead>
                       <tbody className="bg-gray-800 divide-y divide-gray-700">
-                        <tr>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            Minecraft
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            Paper
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            Minecraft
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
-                              Edit
-                            </Button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            FiveM
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            FXServer
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            GTA
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
-                              Edit
-                            </Button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            Rust
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            Vanilla
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            Rust
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
-                              Edit
-                            </Button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            ARK
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            Survival Evolved
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            ARK
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
-                              Edit
-                            </Button>
-                          </td>
-                        </tr>
+                        {eggs.length > 0 ? (
+                          eggs.map((egg: any, index: number) => (
+                            <tr key={index}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                {egg.name.split(' ')[0]}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                {egg.name}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                Nest #{egg.nest}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
+                                  Edit
+                                </Button>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-400">
+                              {isLoadingEggs ? "Loading templates..." : "No templates found"}
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>

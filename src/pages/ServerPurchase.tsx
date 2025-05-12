@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Server, Check } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { createServer } from "@/lib/pterodactyl-api";
 
 const ServerPurchase = () => {
   const { type, plan } = useParams();
@@ -183,24 +184,75 @@ const ServerPurchase = () => {
   
   const planDetails = getPlanDetails();
   
-  const handlePurchase = (e: React.FormEvent) => {
+  const handlePurchase = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Here you would integrate with your payment processor and then create the server
-    // For now, we'll simulate the process with a timeout
-    setTimeout(() => {
-      // After successful payment, you would call your API to create the server
-      // In a real implementation, this would use the Pterodactyl API
+    try {
+      // Get user ID from localStorage (in a real app, this would come from authentication)
+      const userData = localStorage.getItem('ngHostingUser');
+      const userId = userData ? JSON.parse(userData).id : 1;
+      
+      // Get appropriate egg ID based on plan type
+      let eggId = 1; // Default to Minecraft
+      
+      if (type === 'game') {
+        if (plan?.includes('minecraft')) {
+          eggId = 2; // Paper (Minecraft)
+        } else if (plan?.includes('fivem')) {
+          eggId = 3; // FiveM
+        }
+      }
+      
+      // Create server parameters
+      const serverParams = {
+        name: serverName,
+        user: userId,
+        egg: eggId,
+        docker_image: "ghcr.io/pterodactyl/yolks:java_17", // Default for Minecraft
+        startup: "java -Xms128M -Xmx{{SERVER_MEMORY}}M -jar {{SERVER_JARFILE}}",
+        environment: {
+          SERVER_JARFILE: "server.jar",
+          MINECRAFT_VERSION: "latest"
+        },
+        limits: {
+          memory: planDetails.specs.ram * 1024, // Convert GB to MB
+          swap: 0,
+          disk: planDetails.specs.disk * 1024, // Convert GB to MB
+          io: 500,
+          cpu: planDetails.specs.cpu * 100 // Convert vCores to percentage
+        },
+        feature_limits: {
+          databases: 1,
+          backups: 1,
+          allocations: 1
+        },
+        allocation: {
+          default: 1
+        }
+      };
+      
+      // Call API to create server
+      await createServer(serverParams);
+      
+      // Show success message
       toast({
         title: "Server purchased successfully!",
         description: `Your ${planDetails.name} server "${serverName}" is being deployed. You'll receive an email when it's ready.`,
       });
-      setIsLoading(false);
       
       // Redirect to dashboard after purchase
       navigate("/dashboard");
-    }, 2000);
+    } catch (error) {
+      console.error("Error creating server:", error);
+      toast({
+        title: "Purchase failed",
+        description: "There was an error creating your server. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   return (
@@ -339,10 +391,10 @@ const ServerPurchase = () => {
             </Card>
             
             <div className="mt-8 bg-muted p-6 rounded-lg">
-              <h3 className="font-semibold mb-2">Instant Setup with Pterodactyl</h3>
+              <h3 className="font-semibold mb-2">Instant Setup with NextGen Panel</h3>
               <p className="text-muted-foreground mb-4">
                 Your server will be automatically created and available immediately 
-                after purchase through our Pterodactyl panel.
+                after purchase through our NextGen management panel.
               </p>
               <p className="text-sm text-muted-foreground">
                 Access details will be sent to your email address.
