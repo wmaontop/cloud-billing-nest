@@ -14,15 +14,18 @@ interface ServerCardProps {
   refreshServers?: () => void;
 }
 
+// Define the proper status type to fix TypeScript errors
+type ServerStatus = "running" | "stopped" | "starting" | "stopping" | "suspended" | "error";
+
 const ServerCard = ({ server, refreshServers }: ServerCardProps) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [serverStatus, setServerStatus] = useState(server.status);
+  const [serverStatus, setServerStatus] = useState<ServerStatus>(server.status as ServerStatus);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     // Update status when server prop changes
-    setServerStatus(server.status);
+    setServerStatus(server.status as ServerStatus);
   }, [server]);
 
   const statusColors = {
@@ -38,7 +41,7 @@ const ServerCard = ({ server, refreshServers }: ServerCardProps) => {
     try {
       setIsRefreshing(true);
       const status = await getServerPowerStatus(server.id);
-      setServerStatus(status);
+      setServerStatus(status as ServerStatus);
     } catch (error) {
       console.error("Error refreshing server status:", error);
     } finally {
@@ -123,8 +126,12 @@ const ServerCard = ({ server, refreshServers }: ServerCardProps) => {
         return "Stopping...";
       case "stopped":
         return "Stopped";
+      case "suspended":
+        return "Suspended";
+      case "error":
+        return "Error";
       default:
-        return serverStatus.charAt(0).toUpperCase() + serverStatus.slice(1);
+        return "Unknown";
     }
   };
 
@@ -155,7 +162,7 @@ const ServerCard = ({ server, refreshServers }: ServerCardProps) => {
             <RefreshCw className={`h-3 w-3 ${isRefreshing ? "animate-spin" : ""}`} />
           </Button>
           <Badge
-            className={`${statusColors[serverStatus as keyof typeof statusColors] || "bg-gray-500"} text-white`}
+            className={`${statusColors[serverStatus] || "bg-gray-500"} text-white`}
             variant="outline"
           >
             {getStatusLabel()}

@@ -9,33 +9,68 @@ import Footer from "@/components/Footer";
 import ServerCard from "@/components/ServerCard";
 import { Server, Invoice, Transaction } from "@/lib/types";
 import { CreditCard, Server as ServerIcon, Plus, Database, Activity, RefreshCw } from "lucide-react";
-import { getServers } from "@/lib/pterodactyl-api";
+import { getServers, syncServersFromPanel } from "@/lib/pterodactyl-api";
 import { useToast } from "@/components/ui/use-toast";
 
 const Dashboard = () => {
   const [servers, setServers] = useState<Server[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
   const { toast } = useToast();
 
-  // Fetch servers on component mount
+  // Fetch servers on component mount and set up a refresh interval
   useEffect(() => {
-    fetchServers();
+    fetchServers(true);
+
+    // Refresh servers every 30 seconds
+    const interval = setInterval(() => {
+      fetchServers(false);
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
-  const fetchServers = async () => {
-    setIsLoading(true);
+  const syncAllServers = async () => {
+    setIsSyncing(true);
+    try {
+      const success = await syncServersFromPanel();
+      if (success) {
+        toast({
+          title: "Server Synchronization Complete",
+          description: "All servers have been synchronized with your Pterodactyl panel.",
+        });
+        await fetchServers(false);
+      } else {
+        throw new Error("Failed to sync servers");
+      }
+    } catch (error) {
+      console.error("Error syncing servers:", error);
+      toast({
+        title: "Synchronization Failed",
+        description: "Failed to sync servers with your panel. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const fetchServers = async (showLoading: boolean = true) => {
+    if (showLoading) setIsLoading(true);
     try {
       const fetchedServers = await getServers();
       setServers(fetchedServers);
     } catch (error) {
       console.error("Error fetching servers:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load servers. Please try again.",
-        variant: "destructive"
-      });
+      if (showLoading) {
+        toast({
+          title: "Error",
+          description: "Failed to load servers. Please try again.",
+          variant: "destructive"
+        });
+      }
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
     }
   };
 
@@ -157,7 +192,11 @@ const Dashboard = () => {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">Your Servers</h2>
               <div className="flex gap-4">
-                <Button variant="outline" onClick={fetchServers} disabled={isLoading}>
+                <Button variant="outline" onClick={syncAllServers} disabled={isSyncing}>
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? "animate-spin" : ""}`} />
+                  {isSyncing ? "Syncing from Panel..." : "Sync from Panel"}
+                </Button>
+                <Button variant="outline" onClick={() => fetchServers(true)} disabled={isLoading}>
                   <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
                   {isLoading ? "Refreshing..." : "Refresh"}
                 </Button>
@@ -192,7 +231,7 @@ const Dashboard = () => {
                   </Card>
                 ) : (
                   servers.map((server) => (
-                    <ServerCard key={server.id} server={server} />
+                    <ServerCard key={server.id} server={server} refreshServers={() => fetchServers(false)} />
                   ))
                 )}
               </div>

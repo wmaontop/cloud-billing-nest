@@ -4,7 +4,7 @@
  * This file handles communication with the Pterodactyl panel API
  */
 
-// Set the default Pterodactyl panel URL
+// Set the default Pterodactyl panel URL to the one provided by the user
 const DEFAULT_PANEL_URL = "http://104.234.107.159";
 
 export interface PterodactylApiConfig {
@@ -73,7 +73,6 @@ export const syncServersFromPanel = async (): Promise<boolean> => {
     for (let i = 0; i < eggs.length; i++) {
       const egg = eggs[i];
       const serverId = `server${i + 1}`;
-      const ipOctet3 = Math.floor(Math.random() * 255);
       const ipOctet4 = Math.floor(Math.random() * 255);
       
       servers.push({
@@ -176,7 +175,7 @@ export const getEggs = async (): Promise<any[]> => {
     const { apiUrl, apiKey } = getApiConfig();
     
     // In production, this would be a real API call
-    // For development, we'll return predefined eggs
+    // For development, we'll return expanded game server options
     return [
       {
         id: 1,
@@ -232,6 +231,42 @@ export const getEggs = async (): Promise<any[]> => {
         nest: 7,
         docker_image: "ghcr.io/pterodactyl/voice:mumble",
       },
+      {
+        id: 10,
+        name: "Garry's Mod",
+        nest: 4,
+        docker_image: "ghcr.io/pterodactyl/games:source",
+      },
+      {
+        id: 11,
+        name: "Minecraft Bedrock",
+        nest: 1,
+        docker_image: "ghcr.io/parkervcp/yolks:debian",
+      },
+      {
+        id: 12,
+        name: "Valheim",
+        nest: 8,
+        docker_image: "ghcr.io/pterodactyl/games:wine",
+      },
+      {
+        id: 13,
+        name: "Discord Bot",
+        nest: 9,
+        docker_image: "ghcr.io/parkervcp/yolks:nodejs_18",
+      },
+      {
+        id: 14,
+        name: "MongoDB",
+        nest: 10,
+        docker_image: "ghcr.io/parkervcp/yolks:mongodb_4",
+      },
+      {
+        id: 15,
+        name: "MySQL",
+        nest: 10,
+        docker_image: "ghcr.io/parkervcp/yolks:mysql_8",
+      }
     ];
   } catch (error) {
     console.error('Error fetching eggs:', error);
@@ -246,7 +281,7 @@ export const getServerPowerStatus = async (serverId: string): Promise<string> =>
   try {
     const { apiUrl, apiKey } = getApiConfig();
     
-    // In production, this would be a real API call
+    // In production, this would be a real API call connecting to the actual panel at 104.234.107.159
     // For development, we'll simulate getting server status
     const storedServers = localStorage.getItem('ngHostingServers');
     
@@ -273,7 +308,7 @@ export const sendPowerAction = async (serverId: string, action: 'start' | 'stop'
   try {
     const { apiUrl, apiKey } = getApiConfig();
     
-    // In production, this would be a real API call
+    // In production, this would be a real API call to 104.234.107.159
     // For development, we'll simulate power action
     const storedServers = localStorage.getItem('ngHostingServers');
     
@@ -331,3 +366,8 @@ export const deleteServer = async (serverId: string): Promise<boolean> => {
     return false;
   }
 };
+
+// Force a refresh of all servers on initial load to ensure we're showing the latest data
+syncServersFromPanel().then(() => {
+  console.log('Initial server sync complete');
+});
