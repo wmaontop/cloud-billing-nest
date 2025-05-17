@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Server as ServerType } from "@/lib/types";
-import { Server as ServerIcon, Power, Settings, RefreshCw, Cpu, Memory, HardDrive, Network } from "lucide-react";
+import { Server as ServerIcon, Power, Settings, RefreshCw, Cpu, MemoryStick, HardDrive, Network } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { sendPowerAction, getServerPowerStatus } from "@/lib/pterodactyl-api";
 import { Progress } from "@/components/ui/progress";
@@ -256,7 +256,7 @@ const ServerCard = ({ server, refreshServers }: ServerCardProps) => {
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center">
-                    <Memory className="h-3 w-3 text-green-400 mr-1" />
+                    <MemoryStick className="h-3 w-3 text-green-400 mr-1" />
                     <span className="text-gray-400">RAM Usage</span>
                   </div>
                   <span className="text-white">{resources.ram}%</span>

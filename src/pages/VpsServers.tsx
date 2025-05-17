@@ -1,16 +1,12 @@
-
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Server, Shield, Network, Cpu, Memory, HardDrive, Globe } from "lucide-react";
+import { Check, Server, Shield, Network, Cpu, MemoryStick, HardDrive, Globe } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
-
-// Add framer-motion dependency
-<lov-add-dependency>framer-motion@latest</lov-add-dependency>
 
 const VpsServers = () => {
   // Track which plan is hovered for enhanced effects
@@ -304,7 +300,7 @@ const VpsServers = () => {
             </motion.div>
             
             <motion.div variants={featureVariants} className="bg-gray-800 p-6 rounded-lg border border-gray-700 hover:border-blue-500/30 transition-all duration-300">
-              <Memory className="h-10 w-10 text-blue-400 mb-4" />
+              <MemoryStick className="h-10 w-10 text-blue-400 mb-4" />
               <h3 className="font-semibold mb-2 text-white text-lg">24/7 Support</h3>
               <p className="text-gray-400 text-sm">Technical assistance whenever you need it through our ticketing system</p>
             </motion.div>
