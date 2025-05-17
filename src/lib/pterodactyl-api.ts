@@ -62,35 +62,80 @@ export const getApiConfig = (): PterodactylApiConfig => {
 export const syncServersFromPanel = async (): Promise<boolean> => {
   try {
     const { apiUrl, apiKey } = getApiConfig();
+    console.log(`Syncing servers from panel at ${apiUrl}`);
     
     // In a real production environment, this would make an actual API call
-    // For development, we'll simulate syncing by generating sample servers
+    // For development, we'll simulate syncing by generating sample servers with realistic data
     
     // Generate sample servers based on eggs
     const eggs = await getEggs();
     const servers = [];
     
+    // Create a variety of servers with different games
+    const ipBase = "104.234.107";
+    const statusOptions = ["running", "stopped"];
+    const serverPrefixes = [
+      "Survival", "Creative", "Skyblock", "Factions", "Minigames", 
+      "Roleplay", "PvP", "Economy", "Hardcore", "Adventure"
+    ];
+    
     for (let i = 0; i < eggs.length; i++) {
       const egg = eggs[i];
       const serverId = `server${i + 1}`;
-      const ipOctet4 = Math.floor(Math.random() * 255);
+      const ipOctet4 = 100 + Math.floor(Math.random() * 155);
+      const statusIndex = Math.floor(Math.random() * statusOptions.length);
+      const prefixIndex = Math.floor(Math.random() * serverPrefixes.length);
+      const planOptions = ['starter', 'standard', 'premium'];
+      const planIndex = Math.floor(Math.random() * planOptions.length);
+      
+      // Use the egg name to determine appropriate resources
+      let cpuValue = 1;
+      let ramValue = 2;
+      let diskValue = 20;
+      
+      // Assign resources based on game type
+      if (egg.name.includes("Rust") || egg.name.includes("ARK")) {
+        cpuValue = 4;
+        ramValue = 8;
+        diskValue = 100;
+      } else if (egg.name.includes("Minecraft") || egg.name.includes("FiveM")) {
+        cpuValue = 2;
+        ramValue = 4;
+        diskValue = 50;
+      } else if (egg.name.includes("CS:GO") || egg.name.includes("Garry")) {
+        cpuValue = 3;
+        ramValue = 6;
+        diskValue = 60;
+      }
+      
+      // Adjust resources based on plan
+      if (planOptions[planIndex] === 'standard') {
+        cpuValue *= 1.5;
+        ramValue *= 1.5;
+        diskValue *= 1.5;
+      } else if (planOptions[planIndex] === 'premium') {
+        cpuValue *= 2;
+        ramValue *= 2;
+        diskValue *= 2;
+      }
       
       servers.push({
         id: serverId,
-        name: `${egg.name} Server`,
-        status: Math.random() > 0.5 ? 'running' : 'stopped',
-        cpu: 1 + Math.floor(Math.random() * 4), // 1-4 cores
-        ram: 1 + Math.floor(Math.random() * 8), // 1-8 GB
-        disk: 20 + Math.floor(Math.random() * 80), // 20-100 GB
-        ip: `104.234.107.${ipOctet4}`,
+        name: `${serverPrefixes[prefixIndex]} ${egg.name} Server`,
+        status: statusOptions[statusIndex],
+        cpu: Math.round(cpuValue), 
+        ram: Math.round(ramValue),
+        disk: Math.round(diskValue),
+        ip: `${ipBase}.${ipOctet4}`,
         pterodactylId: `ptero-${serverId}`,
-        planId: ['starter', 'standard', 'premium'][Math.floor(Math.random() * 3)],
+        planId: planOptions[planIndex],
         created_at: new Date().toISOString()
       });
     }
     
     // Save the synchronized servers to localStorage
     localStorage.setItem('ngHostingServers', JSON.stringify(servers));
+    console.log(`Synchronized ${servers.length} servers from panel`);
     
     return true;
   } catch (error) {
@@ -105,6 +150,7 @@ export const syncServersFromPanel = async (): Promise<boolean> => {
 export const getServers = async (): Promise<any[]> => {
   try {
     const { apiUrl, apiKey } = getApiConfig();
+    console.log(`Fetching servers from ${apiUrl}`);
     
     // In production, this would be a real API call
     // For development, we'll get servers from localStorage
@@ -115,6 +161,7 @@ export const getServers = async (): Promise<any[]> => {
     }
     
     // If no servers in localStorage, sync from panel
+    console.log("No servers found in localStorage, syncing from panel");
     await syncServersFromPanel();
     
     const newStoredServers = localStorage.getItem('ngHostingServers');
@@ -139,7 +186,7 @@ export const createServer = async (params: ServerCreationParams): Promise<any> =
     
     // Generate a random ID and IP address
     const newServerId = Math.floor(Math.random() * 10000).toString();
-    const ipOctet4 = Math.floor(Math.random() * 255);
+    const ipOctet4 = 100 + Math.floor(Math.random() * 155);
     
     const newServer = {
       id: newServerId,
@@ -173,6 +220,7 @@ export const createServer = async (params: ServerCreationParams): Promise<any> =
 export const getEggs = async (): Promise<any[]> => {
   try {
     const { apiUrl, apiKey } = getApiConfig();
+    console.log(`Fetching eggs from ${apiUrl}`);
     
     // In production, this would be a real API call
     // For development, we'll return expanded game server options
@@ -266,6 +314,36 @@ export const getEggs = async (): Promise<any[]> => {
         name: "MySQL",
         nest: 10,
         docker_image: "ghcr.io/parkervcp/yolks:mysql_8",
+      },
+      {
+        id: 16,
+        name: "Palworld",
+        nest: 11,
+        docker_image: "ghcr.io/pterodactyl/games:wine",
+      },
+      {
+        id: 17,
+        name: "Satisfactory",
+        nest: 12,
+        docker_image: "ghcr.io/pterodactyl/games:wine",
+      },
+      {
+        id: 18,
+        name: "Among Us",
+        nest: 13,
+        docker_image: "ghcr.io/pterodactyl/games:wine",
+      },
+      {
+        id: 19,
+        name: "7 Days to Die",
+        nest: 14,
+        docker_image: "ghcr.io/pterodactyl/games:source",
+      },
+      {
+        id: 20,
+        name: "Counter-Strike 2",
+        nest: 15,
+        docker_image: "ghcr.io/pterodactyl/games:source",
       }
     ];
   } catch (error) {
@@ -280,8 +358,9 @@ export const getEggs = async (): Promise<any[]> => {
 export const getServerPowerStatus = async (serverId: string): Promise<string> => {
   try {
     const { apiUrl, apiKey } = getApiConfig();
+    console.log(`Checking server ${serverId} power status from ${apiUrl}`);
     
-    // In production, this would be a real API call connecting to the actual panel at 104.234.107.159
+    // In production, this would be a real API call connecting to the actual panel
     // For development, we'll simulate getting server status
     const storedServers = localStorage.getItem('ngHostingServers');
     
@@ -307,8 +386,9 @@ export const getServerPowerStatus = async (serverId: string): Promise<string> =>
 export const sendPowerAction = async (serverId: string, action: 'start' | 'stop' | 'restart'): Promise<boolean> => {
   try {
     const { apiUrl, apiKey } = getApiConfig();
+    console.log(`Sending ${action} command to server ${serverId} at ${apiUrl}`);
     
-    // In production, this would be a real API call to 104.234.107.159
+    // In production, this would be a real API call
     // For development, we'll simulate power action
     const storedServers = localStorage.getItem('ngHostingServers');
     
@@ -350,6 +430,9 @@ export const restartServer = async (serverId: string): Promise<boolean> => {
  */
 export const deleteServer = async (serverId: string): Promise<boolean> => {
   try {
+    const { apiUrl, apiKey } = getApiConfig();
+    console.log(`Deleting server ${serverId} from ${apiUrl}`);
+    
     const storedServers = localStorage.getItem('ngHostingServers');
     
     if (storedServers) {
@@ -366,6 +449,9 @@ export const deleteServer = async (serverId: string): Promise<boolean> => {
     return false;
   }
 };
+
+// Initialize API configuration on load
+getApiConfig();
 
 // Force a refresh of all servers on initial load to ensure we're showing the latest data
 syncServersFromPanel().then(() => {
